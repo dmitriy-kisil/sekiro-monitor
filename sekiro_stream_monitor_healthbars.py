@@ -139,8 +139,8 @@ def audiohandler(filename):
 def videohandler(filename):
     frame_width = 1280
     frame_height = 720
-    frame_rate = 13.0
-
+    frame_rate = 21.0
+    fps_calc = []
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(f'{filename}.avi', fourcc, frame_rate,
                           (frame_width, frame_height))
@@ -154,6 +154,7 @@ def videohandler(filename):
         h = rect[3] - y - 8
         monitor = {"top": y, "left": x, "width": w, "height": h}
         start_time = time.time()
+        frames = []
         while True:
             # Time which frame has been captured, need to show how many seconds screen is recorded
             last_time = time.time()
@@ -173,6 +174,7 @@ def videohandler(filename):
             # Track seconds for screenplay
             how_much_seconds = int(time.time() - start_time)
             # Add variables to screen for easy monitoring
+            fps_calc.append(time.time() - last_time)
             cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - last_time)),
                         (0, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.putText(frame, f"How much seconds: {how_much_seconds}", (0, 130),
@@ -185,30 +187,37 @@ def videohandler(filename):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.putText(frame, f"Enemy concentration: {enemy_concentration_percentage_value * 100} %", (0, 210),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            # Save frame to video
-            out.write(frame)
+            frames.append(frame)
             # Show frame to you
             cv2.imshow('frame', frame)
             # Press "q" to quit
-            if cv2.waitKey(25) & 0xFF == ord("q"):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
+    print('Total frames: ' + str(len(frames)))
+    print(f'Total seconds: {time.time() - start_time}')
+    print("Avg FPS when recording: " + str(1.0 / (sum(fps_calc) / len(fps_calc))))
+    print('Avg FPS when writing to video file: ' + str(len(frames)/(time.time() - start_time)))
+    print("Writing frames to video")
+    for i in frames:
+        out.write(i)
+    print("Writing is done!")
     # Clean up
     out.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    filename = "sekiro_output2"
-    # Cannot found how to sync audio with video, so don't use the audio stream
-    # proc1 = Process(target=audiohandler, args=(filename,))
-    # proc1.start()
+    filename = "sekiro_output3"
+    # You can disable recording audio (currently can not found a way to sync it properly)
     proc2 = Process(target=videohandler, args=(filename,))
+    proc1 = Process(target=audiohandler, args=(filename,))
     proc2.start()
-    # proc1.join()
+    proc1.start()
     proc2.join()
-    # merge_into_movie = f'ffmpeg -y -i {filename}.avi -i {filename}.wav -c copy {filename}.mkv'
-    # p = subprocess.Popen(merge_into_movie)
-    # output, _ = p.communicate()
-    # print(output)
-    # os.remove(f'{filename}.avi')
-    # os.remove(f'{filename}.wav')
+    proc1.join()
+    merge_into_movie = f'ffmpeg -y -i {filename}.avi -i {filename}.wav -c copy {filename}.mkv'
+    p = subprocess.Popen(merge_into_movie)
+    output, _ = p.communicate()
+    print(output)
+    os.remove(f'{filename}.avi')
+    os.remove(f'{filename}.wav')

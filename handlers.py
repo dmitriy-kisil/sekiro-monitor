@@ -6,7 +6,7 @@ import pyaudio
 from monitoring_stats import *
 
 
-def audiohandler(filename, event):
+def audiohandler(filename, event, episode_path):
 
     chunk = 1024  # Record in chunks of 1024 samples
     sample_format = pyaudio.paInt16  # 16 bits per sample
@@ -75,17 +75,17 @@ def audiohandler(filename, event):
     wf.close()
 
 
-def videohandler(filename, event):
+def videohandler(filename, event, episode_path):
     frame_width = 1280
     frame_height = 720
-    frame_rate = 25.0
+    frame_rate = 30.0
     fps_calc = []
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(f'{filename}.avi', fourcc, frame_rate,
                           (frame_width, frame_height))
     with mss.mss() as sct:
         # Part of the screen to capture
-        hwnd = win32gui.FindWindow(None, 'Sekiro')
+        hwnd = win32gui.FindWindow(None, 'Steam')
         rect = win32gui.GetWindowRect(hwnd)
         x = rect[0] + 8
         y = rect[1] + 32
@@ -98,6 +98,9 @@ def videohandler(filename, event):
         count = 0
         another_count = 0
         third_count = 0
+        done = False
+        # Load image, which will be trying to find
+        template = cv2.imread('win.PNG', 0)
         while True:
             # Time which frame has been captured, need to show how many seconds screen is recorded
             last_time = time.time()
@@ -116,6 +119,12 @@ def videohandler(filename, event):
             enemy_concentration_percentage_value = enemy_concentration_percentage(frame)
             # Track seconds for screenplay
             how_much_seconds = int(time.time() - start_time)
+            # Calculate reward:
+            reward = calc_reward(hero_health_percentage_value, hero_concentration_percentage_value,
+                                 enemy_health_percentage_value, enemy_concentration_percentage_value,
+                                 how_much_seconds)
+            # Check if done:
+            done = check_win(frame, template, done)
             # Add variables to screen for easy monitoring
             fps_calc.append(time.time() - last_time)
             cv2.putText(frame, "FPS: %.0f" % (1.0 / (time.time() - last_time)),
@@ -129,6 +138,8 @@ def videohandler(filename, event):
             cv2.putText(frame, f"Hero concentration: {hero_concentration_percentage_value * 100:.0f} %", (0, 190),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.putText(frame, f"Enemy concentration: {enemy_concentration_percentage_value * 100:.0f} %", (0, 210),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.putText(frame, f"Done: {done}", (0, 230),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             curr_sec = round(last_time)
             if curr_sec == prev_sec:
@@ -144,6 +155,21 @@ def videohandler(filename, event):
                 prev_sec = curr_sec
                 third_count += 1
                 # time.sleep(0.018)
+            res_img = cv2.resize(img, (64, 64))
+            res_img = np.array(res_img)
+            curr_time = time.time()
+            spend = curr_time - start_time
+            if spend > 1:
+                interval = int(30 / (1 / (spend - int(spend)))) + 1
+            else:
+                interval = int(30 / (1 / spend)) + 1
+
+            with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_frame.npy', 'wb') as f:
+                np.save(f, res_img)
+            stats = np.array([hero_health_percentage_value, hero_concentration_percentage_value,
+                              enemy_health_percentage_value, enemy_concentration_percentage_value, reward, done])
+            with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_states.npy', 'wb') as f:
+                np.save(f, stats)
             # Show frame to you
             cv2.imshow('frame', frame)
             # Press "q" to quit

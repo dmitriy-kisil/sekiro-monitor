@@ -25,7 +25,7 @@ def enemy_concentration_percentage(image):
     x1, y1, x2, y2 = 645, 44, 872, 45
     enemy_concentration = image[y1:y2, x1:x2]
     grid_HSV = cv2.cvtColor(enemy_concentration, cv2.COLOR_BGR2HSV)
-    lower_orange = np.array([10, 175, 175])
+    lower_orange = np.array([10, 175, 150])
     upper_orange = np.array([25, 255, 255])
     mask = cv2.inRange(grid_HSV, lower_orange, upper_orange)
     enemy_concentration_percentage_value = round(1.0 - (mask > 0).mean(), 2)
@@ -37,7 +37,6 @@ def enemy_concentration_percentage(image):
                  (x1 - int(half_distance * (1.0 - enemy_concentration_percentage_value)), y2), (0, 0, 255), 2)
         cv2.line(image, (x1 + int(half_distance * (1.0 - enemy_concentration_percentage_value)), y1 - 10),
                  (x1 + int(half_distance * (1.0 - enemy_concentration_percentage_value)), y2), (0, 0, 255), 2)
-        cv2.line(image, (x1, y1 + 10), (x2, y2 + 10), (0, 0, 255), 2)
     return enemy_concentration_percentage_value
 
 
@@ -69,3 +68,25 @@ def enemy_health_percentage(image):
         cv2.line(image, (x1 + int((x2 - x1) * enemy_health_percentage_value), y1 - 10),
                  (x1 + int((x2 - x1) * enemy_health_percentage_value), y2), (0, 0, 255), 2)
     return enemy_health_percentage_value
+
+
+def check_win(frame, template, done):
+    # Convert to gray to better recognizing
+    img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Crop recognition window from frame
+    check_win = img_gray[120:410, 510:730]
+    # Opencv will try to find pixels, which are similar ot given icon
+    res = cv2.matchTemplate(check_win, template, cv2.TM_CCORR_NORMED)
+    # You may to play with this value a bit, cause results are sensitive to this value
+    threshold = 0.85
+    # Remain only those pixels, which contain icon at given threshold
+    loc = np.where(res >= threshold)
+    if any(loc[0]):
+        done = True
+    return done
+
+
+def calc_reward(hero_health, hero_concentration, enemy_health, enemy_concentration, how_much_seconds):
+    reward = (hero_health + hero_concentration) - (enemy_health + enemy_concentration)
+    reward = reward - (how_much_seconds / 100) if reward > 0 else reward + (how_much_seconds / 100)
+    return reward

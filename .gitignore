@@ -44,5 +44,6 @@ Thumbs.db
 *.wav
 *.PNG
 *.png
-.idea
-venv
+.idea/
+venv/
+episodes/

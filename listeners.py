@@ -32,16 +32,16 @@ def on_press_keyboard(key):
         if key.char in alphanumeric_actions:
             print('alphanumeric key {0} pressed'.format(key.char))
             actions[alphanumeric_actions.index(key)] = 1
-        # print(f'Save {"".join([str(i) for i in actions])} as {episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy')
-        with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy', 'wb') as f:
-            np.save(f, np.array(actions))
+        print(f'Save {"".join([str(i) for i in actions])} as {episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy')
+        # with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy', 'wb') as f:
+        #     np.save(f, np.array(actions))
         if key.char == 'q':
             # Stop listener
             return False
     except AttributeError:
-        # print(f'Save {"".join([str(i) for i in actions])} as {episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy')
-        with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy', 'wb') as f:
-            np.save(f, np.array(actions))
+        print(f'Save {"".join([str(i) for i in actions])} as {episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy')
+        # with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_keyboard.npy', 'wb') as f:
+        #     np.save(f, np.array(actions))
 
 
 def create_keyboard_listener():
@@ -74,5 +74,5 @@ def on_click_mouse(x, y, button, pressed):
     if pressed and button in mouse_actions.keys():
         actions[list(mouse_actions.keys()).index(button)] = 1
         # print(f'Save {"".join([str(i) for i in actions])} as {episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_mouse.npy')
-        with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_mouse.npy', 'wb') as f:
-            np.save(f, np.array(actions))
+        # with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_mouse.npy', 'wb') as f:
+        #     np.save(f, np.array(actions))

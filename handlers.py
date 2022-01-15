@@ -85,7 +85,7 @@ def videohandler(filename, event, episode_path):
                           (frame_width, frame_height))
     with mss.mss() as sct:
         # Part of the screen to capture
-        hwnd = win32gui.FindWindow(None, 'Steam')
+        hwnd = win32gui.FindWindow(None, 'Sekiro')
         rect = win32gui.GetWindowRect(hwnd)
         x = rect[0] + 8
         y = rect[1] + 32
@@ -164,12 +164,12 @@ def videohandler(filename, event, episode_path):
             else:
                 interval = int(30 / (1 / spend)) + 1
 
-            with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_frame.npy', 'wb') as f:
-                np.save(f, res_img)
-            stats = np.array([hero_health_percentage_value, hero_concentration_percentage_value,
-                              enemy_health_percentage_value, enemy_concentration_percentage_value, reward, done])
-            with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_states.npy', 'wb') as f:
-                np.save(f, stats)
+            # with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_frame.npy', 'wb') as f:
+            #     np.save(f, res_img)
+            # stats = np.array([hero_health_percentage_value, hero_concentration_percentage_value,
+            #                   enemy_health_percentage_value, enemy_concentration_percentage_value, reward, done])
+            # with open(f'{episode_path}/{str(how_much_seconds).zfill(6)}_{interval}_states.npy', 'wb') as f:
+            #     np.save(f, stats)
             # Show frame to you
             cv2.imshow('frame', frame)
             # Press "q" to quit

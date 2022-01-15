@@ -86,7 +86,33 @@ def check_win(frame, template, done):
     return done
 
 
+def check_lose(frame, template, crash):
+    # Convert to gray to better recognizing
+    img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # Crop recognition window from frame
+    check_win = img_gray[216:415, 525:762]
+    # Opencv will try to find pixels, which are similar ot given icon
+    res = cv2.matchTemplate(check_win, template, cv2.TM_CCORR_NORMED)
+    # You may to play with this value a bit, cause results are sensitive to this value
+    threshold = 0.95
+    # Remain only those pixels, which contain icon at given threshold
+    loc = np.where(res >= threshold)
+    if any(loc[0]):
+        crash = True
+    return crash
+
+
 def calc_reward(hero_health, hero_concentration, enemy_health, enemy_concentration, how_much_seconds):
     reward = (hero_health + hero_concentration) - (enemy_health + enemy_concentration)
     reward = reward - (how_much_seconds / 100) if reward > 0 else reward + (how_much_seconds / 100)
+    return reward
+
+
+def calc_reward2(hero_health, hero_concentration, enemy_health, enemy_concentration):
+    reward = (hero_health + hero_concentration) - (enemy_health + enemy_concentration)
+    return reward
+
+
+def calc_reward3(hero_health, hero_concentration, enemy_health, enemy_concentration):
+    reward = 2 - enemy_health - enemy_concentration
     return reward
